@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pfearch</title>
+    <style>
+        input {
+            font-size: 18px;
+        }
+
+        body {
+            padding: 32px;
+            font-size: 20px;
+            line-height: 1.5;
+        }
+
+        .results {
+            border: 1px solid black;
+            padding: 32px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<p>Try "chicken & !lamb" to search for records including chicken and excluding lamb</p>
+
+<form action="">
+    <label for="q">Search</label>
+    <input type="search" name="q" value="{{.Query}}" style="width:100%">
+    <button>Search</button>
+</form>
+
+<div class="results">
+    <p>{{ .ResultsCount }} hits</p>
+
+    {{range .Results}}
+        <h4>
+            {{ .Name }}
+            <br>
+            {{ .Category }}
+        </h4>
+        <p>{{ .Ingredients }}</p>
+        <hr/>
+    {{end}}
+</div>
+
+</body>
+</html>
