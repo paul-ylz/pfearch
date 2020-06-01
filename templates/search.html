@@ -28,6 +28,12 @@
 <form action="">
     <label for="q">Search</label>
     <input type="search" name="q" value="{{.Query}}" style="width:100%">
+    {{range .Categories}}
+        <div class="category_field">
+            <input type="checkbox" id="{{.DataName}}" name="{{.DataName}}" value="1" {{.Attrs}}>
+            <label for="{{.DataName}}">{{.DisplayName}}</label>
+        </div>
+    {{end}}
     <button>Search</button>
 </form>
 
