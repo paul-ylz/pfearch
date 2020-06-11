@@ -19,12 +19,17 @@ var db *sqlx.DB
 
 func main() {
 	tmpl = template.Must(template.ParseFiles("templates/search.html"))
+	tmpl.Funcs(template.FuncMap{
+		"html": func(value interface{}) template.HTML {
+			return template.HTML(fmt.Sprint(value))
+		},
+	})
 	var err error
 	db, err = sqlx.Connect("postgres", "user=postgres dbname=polypet_foods sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(db)
+	log.Println("dbinit OK")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", SearchHandler).Methods("GET")
@@ -57,7 +62,12 @@ type CatFood struct {
 }
 
 const (
-	querySQL = `SELECT category, name, ingredients FROM cat_foods 
+	querySQL = `SELECT category, 
+					ts_headline('english', name, to_tsquery('english', $1), 'StartSel=<mark>,StopSel=</mark>') 
+						AS name,
+					ts_headline('english', ingredients, to_tsquery('english', $1), 'StartSel=<mark>,StopSel=</mark>') 
+						AS ingredients 
+				FROM cat_foods 
 				WHERE ts_idx_col @@ to_tsquery('english', $1) 
 				  AND category IN (`
 
@@ -91,7 +101,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := db.Select(&results, sql, queryArgs...)
 	if err != nil {
-		log.Println("ERROR", err)
+		log.Println("db error: ", err)
 	}
 
 	allCatFoodCategories := []CatFoodCategory{
@@ -108,7 +118,10 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 		Categories:   allCatFoodCategories,
 	}
 	w.WriteHeader(http.StatusOK)
-	_ = tmpl.Execute(w, data)
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Println("template err:", err)
+	}
 }
 
 func getSelectedCategories(values url.Values) []interface{} {
